@@ -1,0 +1,66 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "../generated/prisma"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id            String   @id @default(cuid())
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  name          String?
+  email         String?  @unique
+  phone         String?  @unique
+  image         String?
+  hashedPassword String?
+  ridesOffered  Ride[]   @relation("RidesOfferedByUser")
+  ridesJoined   Ride[]   @relation("RidesJoinedByUsers")
+  ratingsGiven  Rating[] @relation("RatingsGiven")
+  ratingsReceived Rating[] @relation("RatingsReceived")
+  messages      Message[]
+}
+
+model Ride {
+  id            String   @id @default(cuid())
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  driver        User     @relation("RidesOfferedByUser", fields: [driverId], references: [id])
+  driverId      String
+  fromLocation  String
+  toLocation    String
+  departureTime DateTime
+  vehicleType   String
+  totalSeats    Int
+  availableSeats Int
+  isActive      Boolean  @default(true)
+  riders        User[]   @relation("RidesJoinedByUsers")
+  messages      Message[]
+}
+
+model Message {
+  id        String   @id @default(cuid())
+  createdAt DateTime @default(now())
+  sender    User     @relation(fields: [senderId], references: [id])
+  senderId  String
+  ride      Ride     @relation(fields: [rideId], references: [id])
+  rideId    String
+  content   String
+}
+
+model Rating {
+  id        String   @id @default(cuid())
+  createdAt DateTime @default(now())
+  rater     User     @relation("RatingsGiven", fields: [raterId], references: [id])
+  raterId   String
+  ratee     User     @relation("RatingsReceived", fields: [rateeId], references: [id])
+  rateeId   String
+  score     Int
+  comment   String?
+}
